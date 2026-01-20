@@ -12,7 +12,7 @@ def charger_mots(fichier_txt):
 def choisir_mots(liste_mots):
     return random.choice(liste_mots)
 
-def mot_cache(mot_secret, lettres_trouvees):
+def mot_cache(mot_secret, lettres_trouvees, lettres_ratees):
     affichage = ""
 
     for lettre in mot_secret:
@@ -35,6 +35,7 @@ mot_secret=choisir_mots(liste_mots)
 running = True
 
 lettres_trouvees=[]
+lettres_ratees=[]
 
  # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -44,11 +45,25 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        
+        if event.type == pygame.KEYDOWN:
+            lettre = event.unicode.lower()
+            
+            if lettre != "" and lettre.isalpha():
+                if lettre in mot_secret and lettre not in lettres_trouvees:
+                    lettres_trouvees.append(lettre)
+                elif lettre not in mot_secret and lettre not in lettres_ratees:
+                    lettres_ratees.append(lettre)
+
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("white")
+
+    texte_ratees="Lettre ratées : " + " ".join(lettres_ratees)
+    texte_ratees_surface= font.render(texte_ratees, True, "red")
+    screen.blit(texte_ratees_surface, (50, 630))
     
-    texte=mot_cache(mot_secret, lettres_trouvees)
+    texte=mot_cache(mot_secret, lettres_trouvees, lettres_ratees)
     texte_surface= font.render(texte, True, "black")
     screen.blit(texte_surface, (100, 300))
 
