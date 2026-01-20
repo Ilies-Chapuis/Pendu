@@ -28,3 +28,13 @@ organisation
 binaire
 premier
 nombre
+application
+kayak
+exposant
+logarithme
+orange
+realisation
+monteur
+carte
+histoire
+geographie
