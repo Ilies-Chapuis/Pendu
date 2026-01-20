@@ -1,1 +1,15 @@
-Liste de mots 
+python
+ordinateur
+clavier
+souris
+ecran
+jeu
+pendu
+code
+variable
+boucle
+fonction
+liste
+condition
+programme
+logiciel
