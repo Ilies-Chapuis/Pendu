@@ -1,6 +1,6 @@
 import pygame
 import random
-import sys
+
 
 MOTS_FILE = "mots.txt"
 
@@ -50,3 +50,46 @@ def game():
                     else:
                         errors += 1
                         error_animation()
+
+def end_game(win, score, word=None):
+    name = ""
+    while True:
+        screen.fill(WHITE)
+        if win:
+            draw_text("GAGNÉ !", 150)
+        else:
+            draw_text("PERDU !", 150)
+            draw_text(f"Mot : {word}", 200)
+
+        draw_text("Entrez votre nom :", 300)
+        draw_text(name, 350)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and name:
+                    save_score(name, score)
+                    return
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                else:
+                    if len(name) < 10:
+                        name += event.unicode
+
+def add_word():
+    word = ""
+    while True:
+        screen.fill(WHITE)
+        draw_text("Ajouter un mot", 200)
+        draw_text(word, 260)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and word.isalpha():
+                    save_word(word)
+                    return
+                elif event.key == pygame.K_BACKSPACE:
+                    word = word[:-1]
+                else:
+                    word += event.unicode
