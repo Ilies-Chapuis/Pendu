@@ -41,6 +41,8 @@ message = ""
 
 running = True
 
+bouton_rect = pygame.Rect(500, 400, 280, 70)
+
 # ---------- BOUCLE PRINCIPALE ----------
 
 while running:
@@ -58,6 +60,14 @@ while running:
                     lettres_trouvees.append(lettre)
                 elif lettre not in mot_secret and lettre not in lettres_ratees:
                     lettres_ratees.append(lettre)
+
+        if event.type ==pygame.MOUSEBUTTONDOWN and partie_terminee:
+            if bouton_rect.collidepoint(event.pos):
+                mot_secret = choisir_mots(liste_mots)
+                lettres_trouvees = []
+                lettres_ratees = []
+                partie_terminee = False
+                message = ""
 
     # --- LOGIQUE ---
     erreurs = len(lettres_ratees)
@@ -89,6 +99,8 @@ while running:
 
     if partie_terminee:
         screen.blit(font.render(message, True, "blue"), (100, 200))
+        pygame.draw.rect(screen, "green", bouton_rect)
+        screen.blit(font.render("Rejouer", True, "black"), (bouton_rect.x + 50, bouton_rect.y + 15))
 
     pygame.display.flip()
     clock.tick(60)
