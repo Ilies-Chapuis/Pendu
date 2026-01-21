@@ -1,85 +1,96 @@
 import pygame
 import random
 
-#mettre boucle randomn
+# ---------- FONCTIONS ----------
 
 def charger_mots(fichier_txt):
     fichier = open(fichier_txt, "r")
-    mots= fichier.read().splitlines()
+    mots = fichier.read().splitlines()
     fichier.close()
     return mots
 
 def choisir_mots(liste_mots):
     return random.choice(liste_mots)
 
-def mot_cache(mot_secret, lettres_trouvees, lettres_ratees):
+def mot_cache(mot_secret, lettres_trouvees):
     affichage = ""
-
     for lettre in mot_secret:
         if lettre in lettres_trouvees:
             affichage += lettre + " "
         else:
             affichage += "_ "
-
     return affichage
 
-# pygame setup
+
+# ---------- PYGAME SETUP ----------
+
 pygame.init()
 font = pygame.font.Font(None, 64)
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-liste_mots=charger_mots("mots.txt")
-mot_secret=choisir_mots(liste_mots)
+liste_mots = charger_mots("mots.txt")
+mot_secret = choisir_mots(liste_mots)
+
+lettres_trouvees = []
+lettres_ratees = []
+
+Max_Erreurs = 6
+partie_terminee = False
+message = ""
 
 running = True
 
-lettres_trouvees=[]
-lettres_ratees=[]
-Max_Erreurs = 6
-
- # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
+# ---------- BOUCLE PRINCIPALE ----------
 
 while running:
 
+    # --- EVENTS ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        
-        if event.type == pygame.KEYDOWN:
+
+        if event.type == pygame.KEYDOWN and not partie_terminee:
             lettre = event.unicode.lower()
-            
+
             if lettre != "" and lettre.isalpha():
                 if lettre in mot_secret and lettre not in lettres_trouvees:
                     lettres_trouvees.append(lettre)
                 elif lettre not in mot_secret and lettre not in lettres_ratees:
                     lettres_ratees.append(lettre)
-    
+
+    # --- LOGIQUE ---
+    erreurs = len(lettres_ratees)
+
+    gagne = True
+    for lettre in mot_secret:
+        if lettre not in lettres_trouvees:
+            gagne = False
+
+    if not partie_terminee:
+        if erreurs >= Max_Erreurs:
+            partie_terminee = True
+            message = "Perdu, le mot était : " + mot_secret
+        elif gagne:
+            partie_terminee = True
+            message = "Félicitations vous avez gagné"
+
+    # --- AFFICHAGE ---
     screen.fill("white")
 
-    erreurs = len(lettres_ratees)
-    texte_erreurs= f"Erreurs : {erreurs} / {Max_Erreurs}"
-    texte_erreurs_surface= font.render(texte_erreurs, True, "black")
-    screen.blit(texte_erreurs_surface, (50, 50))
+    texte_erreurs = f"Erreurs : {erreurs} / {Max_Erreurs}"
+    screen.blit(font.render(texte_erreurs, True, "black"), (50, 50))
 
+    texte_ratees = "Lettres ratées : " + " ".join(lettres_ratees)
+    screen.blit(font.render(texte_ratees, True, "red"), (50, 630))
 
-    # fill the screen with a color to wipe away anything from last frame
-    
+    texte = mot_cache(mot_secret, lettres_trouvees)
+    screen.blit(font.render(texte, True, "black"), (100, 300))
 
-    texte_ratees="Lettres ratées : " + " ".join(lettres_ratees)
-    texte_ratees_surface= font.render(texte_ratees, True, "red")
-    screen.blit(texte_ratees_surface, (50, 630))
-    
-    texte=mot_cache(mot_secret, lettres_trouvees, lettres_ratees)
-    texte_surface= font.render(texte, True, "black")
-    screen.blit(texte_surface, (100, 300))
+    if partie_terminee:
+        screen.blit(font.render(message, True, "blue"), (100, 200))
 
-    # RENDER YOUR GAME HERE
-
-    # flip() the display to put your work on screen
     pygame.display.flip()
-
-    clock.tick(60)  # limits FPS to 60
+    clock.tick(60)
 
 pygame.quit()
