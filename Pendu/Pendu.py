@@ -36,6 +36,7 @@ running = True
 
 lettres_trouvees=[]
 lettres_ratees=[]
+Max_Erreurs = 6
 
  # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -54,12 +55,19 @@ while running:
                     lettres_trouvees.append(lettre)
                 elif lettre not in mot_secret and lettre not in lettres_ratees:
                     lettres_ratees.append(lettre)
+    
+    screen.fill("white")
+
+    erreurs = len(lettres_ratees)
+    texte_erreurs= f"Erreurs : {erreurs} / {Max_Erreurs}"
+    texte_erreurs_surface= font.render(texte_erreurs, True, "black")
+    screen.blit(texte_erreurs_surface, (50, 50))
 
 
     # fill the screen with a color to wipe away anything from last frame
-    screen.fill("white")
+    
 
-    texte_ratees="Lettre ratées : " + " ".join(lettres_ratees)
+    texte_ratees="Lettres ratées : " + " ".join(lettres_ratees)
     texte_ratees_surface= font.render(texte_ratees, True, "red")
     screen.blit(texte_ratees_surface, (50, 630))
     
