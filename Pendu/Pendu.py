@@ -21,6 +21,34 @@ def mot_cache(mot_secret, lettres_trouvees):
             affichage += "_ "
     return affichage
 
+def dessin_pendu(screen, erreurs):
+    
+    if erreurs>=1:
+        pygame.draw.line(screen, "black", (850, 500), (1100, 500), 5)
+
+        if erreurs>=2:
+            pygame.draw.line(screen, "black", (900, 500), (900, 150), 5)
+
+            if erreurs>=3:
+                pygame.draw.line(screen, "black", (900, 150), (1050, 150), 5)
+
+                if erreurs>=4:
+                    pygame.draw.line(screen, "black", (1050, 150), (1050, 200), 5)
+
+                    if erreurs>=5:
+                        pygame.draw.circle(screen, "black", (1050, 240), 40, 5)
+
+                        if erreurs>=6:
+                            pygame.draw.line(screen, "black", (1050, 280), (1050, 380), 5)
+
+                            if erreurs>=7:
+                                pygame.draw.line(screen, "black", (1050, 310), (1000, 350), 5)
+                                pygame.draw.line(screen, "black", (1050, 310), (1100, 350), 5)
+
+                                #jambes
+                                pygame.draw.line(screen, "black", (1050, 380), (1000, 450), 5)
+                                pygame.draw.line(screen, "black", (1050, 380), (1100, 450), 5)
+
 
 # ---------- PYGAME SETUP ----------
 
@@ -35,7 +63,7 @@ mot_secret = choisir_mots(liste_mots)
 lettres_trouvees = []
 lettres_ratees = []
 
-Max_Erreurs = 6
+Max_Erreurs = 7
 partie_terminee = False
 message = ""
 
@@ -87,6 +115,8 @@ while running:
 
     # --- AFFICHAGE ---
     screen.fill("white")
+    dessin_pendu(screen, erreurs)
+
 
     texte_erreurs = f"Erreurs : {erreurs} / {Max_Erreurs}"
     screen.blit(font.render(texte_erreurs, True, "black"), (50, 50))
