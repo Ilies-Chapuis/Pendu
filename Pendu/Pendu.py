@@ -21,8 +21,35 @@ def mot_cache(mot_secret, lettres_trouvees):
             affichage += "_ "
     return affichage
 
+def enregistrer_les_scores(mot, erreurs, max_erreurs):
+    score = max_erreurs - erreurs
+    with open("score.txt", "a", encoding="utf-8") as f:
+        f.write(f"{mot},{score}, {erreurs}\n")
+
+def lire_historique():
+    historique = []
+
+    try:
+        with open("score.txt", "r", encoding="utf-8") as f:
+            for ligne in f:
+                mot, score, erreurs = ligne.strip().split(",")
+                historique.append((mot, int(score), int(erreurs)))
+    except FileNotFoundError:
+        pass
+
+    return historique
+
+def meilleur_score():
+    historique = lire_historique()
+
+    if not historique:
+        return None
+
+    return max(historique, key=lambda x: x[1])
+
+
 def dessin_pendu(screen, erreurs):
-    
+
     if erreurs>=1:
         pygame.draw.line(screen, "black", (850, 500), (1100, 500), 5)
 
@@ -109,9 +136,12 @@ while running:
         if erreurs >= Max_Erreurs:
             partie_terminee = True
             message = "Perdu, le mot était : " + mot_secret
+            enregistrer_les_scores(mot_secret, erreurs, Max_Erreurs)
+
         elif gagne:
             partie_terminee = True
             message = "Félicitations vous avez gagné"
+            enregistrer_les_scores(mot_secret, erreurs, Max_Erreurs)
 
     # --- AFFICHAGE ---
     screen.fill("white")
@@ -131,6 +161,17 @@ while running:
         screen.blit(font.render(message, True, "blue"), (100, 200))
         pygame.draw.rect(screen, "green", bouton_rect)
         screen.blit(font.render("Rejouer", True, "black"), (bouton_rect.x + 50, bouton_rect.y + 15))
+        
+    historique= lire_historique()
+    if historique:
+        dernier = historique [-1]
+        texte = f"Dernière partie : {dernier[0]} | Score : {dernier[1]}"
+        screen.blit(font.render(texte, True, "black"), (50, 565))
+
+    best= meilleur_score()
+    if best:
+        texte_best = f"Meilleur score : {best[0]} ({best[1]})"
+        screen.blit(font.render(texte_best, True, "green"), (50, 500))
 
     pygame.display.flip()
     clock.tick(60)

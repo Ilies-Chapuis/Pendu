@@ -1,0 +1,8 @@
+scÃ©nario,0, 7
+bleu,2, 5
+algorithme,6, 1
+kayak,0, 7
+nombre,0, 7
+developpeur,5, 2
+kayak,3, 4
+boucle,0, 7
