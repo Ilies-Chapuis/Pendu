@@ -6,3 +6,12 @@ nombre,0, 7
 developpeur,5, 2
 kayak,3, 4
 boucle,0, 7
+carte,0, 7
+vert,0, 7
+souris,0, 7
+python,0, 7
+internet,0, 7
+rouge,0, 7
+systeme,0, 7
+programmation,0, 7
+vehicule,0, 7

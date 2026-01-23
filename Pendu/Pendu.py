@@ -39,6 +39,27 @@ def lire_historique():
 
     return historique
 
+def afficher_les_scores(screen, font):
+    screen.fill ("white")
+
+    titre= font.render("SCORES", True, "black")
+    screen.blit (titre, (520, 100))
+
+    historique = lire_historique()
+
+    y= 200
+    if not historique:
+        screen.blit(font.render("Aucun score enregistré", True, "red"), (450, y))
+    else:
+        for mot, score, erreurs in historique [-5:]:
+            texte = f"Mot : {mot} | Score : {score} | Erreurs : {erreurs}"
+            screen.blit (font.render(texte, True, "black"), (300, y))
+            y += 50
+            
+    retour = font.render("ECHAP - Retour au menu", True, "blue")
+    screen.blit(retour, (420, 600))
+
+
 def meilleur_score():
     historique = lire_historique()
 
@@ -77,6 +98,22 @@ def dessin_pendu(screen, erreurs):
                                 pygame.draw.line(screen, "black", (1050, 380), (1100, 450), 5)
 
 
+def afficher_le_menu(screen, font):
+    screen.fill("white")
+
+    titre = font.render("JEU DU PENDU", True, "black")
+    jouer = font.render("1 - Jouer", True, "blue")
+    quitter= font.render("2 - Quitter", True, "red")
+
+    screen.blit(titre,(450, 200))
+    screen.blit(jouer, (500, 300))
+    
+    scores = font.render("2 - Scores", True, "green")
+    quitter = font.render("3 - Quitter", True, "red")
+    screen.blit(scores, (500, 370))
+    screen.blit(quitter, (500, 440))
+
+
 # ---------- PYGAME SETUP ----------
 
 pygame.init()
@@ -98,9 +135,63 @@ running = True
 
 bouton_rect = pygame.Rect(500, 400, 280, 70)
 
+etat = "menu"
+
 # ---------- BOUCLE PRINCIPALE ----------
 
 while running:
+    if etat == "menu":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_1:
+
+                    mot_secret = choisir_mots(liste_mots)
+
+                    lettres_trouvees=[]
+
+                    lettres_ratees=[]
+
+                    partie_terminee=False
+
+                    message=""
+
+                    etat="jeu"
+                    
+                elif event.key == pygame.K_2:
+                    etat = "scores"
+                
+                if etat == "scores":
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        etat = "menu"
+
+        afficher_le_menu(screen, font)
+        pygame.display.flip()
+        clock.tick(60)
+        continue
+    
+    if etat == "scores":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    etat = "menu"
+
+        afficher_les_scores(screen, font)
+        pygame.display.flip()
+        clock.tick(60)
+        continue
+
 
     # --- EVENTS ---
     for event in pygame.event.get():
