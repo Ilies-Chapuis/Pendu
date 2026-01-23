@@ -45,6 +45,27 @@ def lire_historique():
     return historique
 
 
+def afficher_les_scores(screen, font):
+    screen.fill("white")
+
+    titre = font.render("SCORES", True, "black")
+    screen.blit(titre, (520, 100))
+
+    historique = lire_historique()
+
+    y = 200
+    if not historique:
+        screen.blit(font.render("Aucun score enregistré", True, "red"), (450, y))
+    else:
+        for mot, score, erreurs in historique[-5:]:
+            texte = f"Mot : {mot} | Score : {score} | Erreurs : {erreurs}"
+            screen.blit(font.render(texte, True, "black"), (300, y))
+            y += 50
+
+    retour = font.render("ECHAP - Retour au menu", True, "blue")
+    screen.blit(retour, (420, 600))
+
+
 def meilleur_score():
     historique = lire_historique()
 
@@ -82,6 +103,35 @@ def dessin_pendu(screen, erreurs):
                                 pygame.draw.line(screen, "black", (1050, 380), (1100, 450), 5)
 
 
+def afficher_le_menu(screen, font):
+    screen.fill("white")
+
+    titre = font.render("JEU DU PENDU", True, "black")
+    jouer = font.render("1 - Jouer", True, "blue")
+    quitter = font.render("2 - Quitter", True, "red")
+
+    screen.blit(titre, (450, 200))
+    screen.blit(jouer, (500, 300))
+
+    scores = font.render("2 - Scores", True, "green")
+    quitter = font.render("3 - Quitter", True, "red")
+    screen.blit(scores, (500, 370))
+    screen.blit(quitter, (500, 440))
+
+def afficher_difficulte(screen, font):
+    screen.fill("white")
+
+    titre = font.render("CHOISIR LA DIFFICULTÉ", True, "black")
+    facile = font.render("1 - Facile (7 erreurs)", True, "green")
+    moyen = font.render("2 - Moyen (5 erreurs)", True, "orange")
+    difficile = font.render("3 - Difficile (4 erreurs)", True, "red")
+
+    screen.blit(titre, (420, 200))
+    screen.blit(facile, (450, 300))
+    screen.blit(moyen, (450, 360))
+    screen.blit(difficile, (450, 420))
+
+
 # ---------- PYGAME SETUP ----------
 
 pygame.init()
@@ -103,9 +153,88 @@ running = True
 
 bouton_rect = pygame.Rect(500, 400, 280, 70)
 
+etat = "menu"
+difficulte = "facile"
+
 # ---------- BOUCLE PRINCIPALE ----------
 
 while running:
+    if etat == "menu":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_1:
+
+                    etat = "difficulte"
+
+                    mot_secret = choisir_mots(liste_mots)
+
+                    lettres_trouvees = []
+
+                    lettres_ratees = []
+
+                    partie_terminee = False
+
+                    message = ""
+
+
+
+                elif event.key == pygame.K_2:
+                    etat = "scores"
+
+                if etat == "scores":
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        etat = "menu"
+
+        afficher_le_menu(screen, font)
+        pygame.display.flip()
+        clock.tick(60)
+        continue
+
+    if etat == "scores":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    etat = "menu"
+
+        afficher_les_scores(screen, font)
+        pygame.display.flip()
+        clock.tick(60)
+        continue
+
+    if etat == "difficulte":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    Max_Erreurs = 7
+                    etat = "jeu"
+                elif event.key == pygame.K_2:
+                    Max_Erreurs = 5
+                    etat = "jeu"
+                elif event.key == pygame.K_3:
+                    Max_Erreurs = 4
+                    etat = "jeu"
+                elif event.key == pygame.K_ESCAPE:
+                    etat = "menu"
+
+        afficher_difficulte(screen, font)
+        pygame.display.flip()
+        clock.tick(60)
+        continue
 
     # --- EVENTS ---
     for event in pygame.event.get():
@@ -165,6 +294,17 @@ while running:
         screen.blit(font.render(message, True, "blue"), (100, 200))
         pygame.draw.rect(screen, "green", bouton_rect)
         screen.blit(font.render("Rejouer", True, "black"), (bouton_rect.x + 50, bouton_rect.y + 15))
+
+    historique = lire_historique()
+    if historique:
+        dernier = historique[-1]
+        texte = f"Dernière partie : {dernier[0]} | Score : {dernier[1]}"
+        screen.blit(font.render(texte, True, "black"), (50, 565))
+
+    best = meilleur_score()
+    if best:
+        texte_best = f"Meilleur score : {best[0]} ({best[1]})"
+        screen.blit(font.render(texte_best, True, "green"), (50, 500))
 
     pygame.display.flip()
     clock.tick(60)
