@@ -15,3 +15,5 @@ rouge,0, 7
 systeme,0, 7
 programmation,0, 7
 vehicule,0, 7
+logarithme,5, 2
+nombre,0, 7
