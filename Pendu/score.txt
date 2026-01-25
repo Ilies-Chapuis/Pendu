@@ -17,3 +17,4 @@ programmation,0, 7
 vehicule,0, 7
 logarithme,5, 2
 nombre,0, 7
+exposant,0,7

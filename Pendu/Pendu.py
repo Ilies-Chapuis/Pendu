@@ -46,8 +46,8 @@ def afficher_les_scores(screen, font):
     screen.blit(titre, (520, 100))
 
     historique = lire_historique()
-
     y = 200
+
     if not historique:
         screen.blit(font.render("Aucun score enregistré", True, "red"), (450, y))
     else:
@@ -61,10 +61,8 @@ def afficher_les_scores(screen, font):
 
 def meilleur_score():
     historique = lire_historique()
-
     if not historique:
         return None
-
     return max(historique, key=lambda x: x[1])
 
 def dessin_pendu(screen, erreurs):
@@ -90,7 +88,6 @@ def dessin_pendu(screen, erreurs):
                             if erreurs >= 7:
                                 pygame.draw.line(screen, "black", (1050, 310), (1000, 350), 5)
                                 pygame.draw.line(screen, "black", (1050, 310), (1100, 350), 5)
-
                                 pygame.draw.line(screen, "black", (1050, 380), (1000, 450), 5)
                                 pygame.draw.line(screen, "black", (1050, 380), (1100, 450), 5)
 
@@ -110,9 +107,14 @@ def afficher_le_menu(screen, font):
 # ---------- PYGAME SETUP ----------
 
 pygame.init()
+
 font = pygame.font.Font(None, 64)
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
+
+icone_menu = pygame.image.load("home.png")
+icone_menu = pygame.transform.scale(icone_menu, (64, 64))
+icone_menu_rect = icone_menu.get_rect(topleft=(15, 15))
 
 liste_mots = charger_mots("mots.txt")
 
@@ -123,15 +125,16 @@ Max_Erreurs = 7
 partie_terminee = False
 message = ""
 
-running = True
 bouton_rect = pygame.Rect(500, 400, 280, 70)
 
+running = True
 etat = "menu"
 
 # ---------- BOUCLE PRINCIPALE ----------
 
 while running:
 
+    # ---------- MENU ----------
     if etat == "menu":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -157,6 +160,7 @@ while running:
         clock.tick(60)
         continue
 
+    # ---------- SCORES ----------
     if etat == "scores":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -172,28 +176,35 @@ while running:
         continue
 
     # ---------- JEU ----------
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         if event.type == pygame.KEYDOWN and not partie_terminee:
             lettre = event.unicode.lower()
-
-            if lettre != "" and lettre.isalpha():
+            if lettre.isalpha():
                 if lettre in mot_secret and lettre not in lettres_trouvees:
                     lettres_trouvees.append(lettre)
                 elif lettre not in mot_secret and lettre not in lettres_ratees:
                     lettres_ratees.append(lettre)
 
-        if event.type == pygame.MOUSEBUTTONDOWN and partie_terminee:
-            if bouton_rect.collidepoint(event.pos):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+            if icone_menu_rect.collidepoint(event.pos):
+                etat = "menu"
+                lettres_trouvees = []
+                lettres_ratees = []
+                partie_terminee = False
+                message = ""
+
+            if partie_terminee and bouton_rect.collidepoint(event.pos):
                 mot_secret = choisir_mots(liste_mots)
                 lettres_trouvees = []
                 lettres_ratees = []
                 partie_terminee = False
                 message = ""
 
+    # ---------- LOGIQUE ----------
     erreurs = len(lettres_ratees)
 
     gagne = True
@@ -212,22 +223,20 @@ while running:
             message = "Félicitations vous avez gagné"
             enregistrer_les_scores(mot_secret, erreurs, Max_Erreurs)
 
+    # ---------- AFFICHAGE ----------
     screen.fill("white")
     dessin_pendu(screen, erreurs)
 
-    texte_erreurs = f"Erreurs : {erreurs} / {Max_Erreurs}"
-    screen.blit(font.render(texte_erreurs, True, "black"), (50, 50))
-
-    texte_ratees = "Lettres ratées : " + " ".join(lettres_ratees)
-    screen.blit(font.render(texte_ratees, True, "red"), (50, 630))
-
-    texte = mot_cache(mot_secret, lettres_trouvees)
-    screen.blit(font.render(texte, True, "black"), (100, 300))
+    screen.blit(font.render(f"Erreurs : {erreurs} / {Max_Erreurs}", True, "black"), (30, 100))
+    screen.blit(font.render("Lettres ratées : " + " ".join(lettres_ratees), True, "red"), (50, 630))
+    screen.blit(font.render(mot_cache(mot_secret, lettres_trouvees), True, "black"), (100, 300))
 
     if partie_terminee:
         screen.blit(font.render(message, True, "blue"), (100, 200))
         pygame.draw.rect(screen, "green", bouton_rect)
         screen.blit(font.render("Rejouer", True, "black"), (bouton_rect.x + 50, bouton_rect.y + 15))
+
+    screen.blit(icone_menu, icone_menu_rect)
 
     pygame.display.flip()
     clock.tick(60)
