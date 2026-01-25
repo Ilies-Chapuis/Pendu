@@ -1,162 +1,299 @@
 import pygame
 import random
-import sys
+import time
 
+
+# Les FONCTIONS
+
+def charger_mots(fichier_txt):
+    #Charge les mots depuis un fichier
+    try:
+        with open(fichier_txt, "r", encoding="utf-8") as f:
+            return f.read().splitlines()
+    except FileNotFoundError:
+        return []
+
+
+def choisir_mots(liste_mots):
+    #Choisit un mot aléatoire
+    return random.choice(liste_mots)
+
+
+def mot_cache(mot_secret, lettres_trouvees):
+    #Affiche le mot caché
+    affichage = ""
+    for lettre in mot_secret:
+        if lettre in lettres_trouvees:
+            affichage += lettre + " "
+        else:
+            affichage += "_ "
+    return affichage
+
+
+def enregistrer_les_scores(mot, erreurs, max_erreurs):
+    #Enregistre un score
+    score = max_erreurs - erreurs
+    with open("score.txt", "a", encoding="utf-8") as f:
+        f.write(f"{mot},{score},{erreurs}\n")
+
+
+def lire_historique():
+    #Lit l'historique des scores
+    historique = []
+    try:
+        with open("score.txt", "r", encoding="utf-8") as f:
+            for ligne in f:
+                mot, score, erreurs = ligne.strip().split(",")
+                historique.append((mot, int(score), int(erreurs)))
+    except FileNotFoundError:
+        pass
+    return historique
+
+
+def afficher_les_scores(screen, font):
+    #Affiche l'écran des scores
+    screen.fill("white")
+    screen.blit(font.render("SCORES", True, "black"), (520, 100))
+
+    historique = lire_historique()
+    y = 200
+
+    if not historique:
+        screen.blit(font.render("Aucun score enregistré", True, "red"), (430, y))
+    else:
+        for mot, score, erreurs in historique[-5:]:
+            txt = f"{mot} | Score : {score} | Erreurs : {erreurs}"
+            screen.blit(font.render(txt, True, "black"), (350, y))
+            y += 50
+
+    screen.blit(font.render("ECHAP - Retour menu", True, "blue"), (420, 600))
+
+
+def meilleur_score():
+    #Retourne le meilleur score
+    historique = lire_historique()
+    if not historique:
+        return None
+    return max(historique, key=lambda x: x[1])
+
+
+def dessin_pendu(screen, erreurs):
+    #Dessine le pendu selon les erreurs
+    if erreurs >= 1:
+        pygame.draw.line(screen, "black", (850, 500), (1100, 500), 5)
+    if erreurs >= 2:
+        pygame.draw.line(screen, "black", (900, 500), (900, 150), 5)
+    if erreurs >= 3:
+        pygame.draw.line(screen, "black", (900, 150), (1050, 150), 5)
+    if erreurs >= 4:
+        pygame.draw.line(screen, "black", (1050, 150), (1050, 200), 5)
+    if erreurs >= 5:
+        pygame.draw.circle(screen, "black", (1050, 240), 40, 5)
+    if erreurs >= 6:
+        pygame.draw.line(screen, "black", (1050, 280), (1050, 380), 5)
+    if erreurs >= 7:
+        pygame.draw.line(screen, "black", (1050, 310), (1000, 350), 5)
+        pygame.draw.line(screen, "black", (1050, 310), (1100, 350), 5)
+        pygame.draw.line(screen, "black", (1050, 380), (1000, 450), 5)
+        pygame.draw.line(screen, "black", (1050, 380), (1100, 450), 5)
+
+
+def afficher_menu(screen, font):
+    #Menu principal
+    screen.fill("white")
+    screen.blit(font.render("JEU DU PENDU", True, "black"), (450, 200))
+    screen.blit(font.render("1 - Jouer", True, "blue"), (500, 300))
+    screen.blit(font.render("2 - Scores", True, "green"), (500, 360))
+    screen.blit(font.render("3 - Ajouter un mot", True, "purple"), (500, 420))
+    screen.blit(font.render("4 - Quitter", True, "red"), (500, 480))
+
+
+def afficher_difficulte(screen, font):
+    #Choix de difficulté
+    screen.fill("white")
+    screen.blit(font.render("CHOIX DIFFICULTÉ", True, "black"), (430, 200))
+    screen.blit(font.render("1 - Facile (5 min)", True, "green"), (450, 300))
+    screen.blit(font.render("2 - Normal (2 min)", True, "orange"), (450, 360))
+    screen.blit(font.render("3 - Difficile (30 sec)", True, "red"), (450, 420))
+
+
+def ajouter_mot(fichier, mot):
+    #Ajoute un mot avec gestion d'erreurs
+    mot = mot.strip().lower()
+
+    if mot == "":
+        return False, "Mot vide"
+    if not mot.isalpha():
+        return False, "Lettres uniquement"
+    if len(mot) < 3:
+        return False, "Mot trop court"
+
+    mots_existants = charger_mots(fichier)
+    if mot in mots_existants:
+        return False, "Mot déjà existant"
+
+    with open(fichier, "a", encoding="utf-8") as f:
+        f.write(mot + "\n")
+
+    return True, "Mot ajouté !"
+
+
+
+#  INITIALISATION
 
 pygame.init()
-
-# ---------------- CONFIG ----------------
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Meilleur Pendu")
+font = pygame.font.Font(None, 64)
+clock = pygame.time.Clock()
 
-FONT = pygame.font.SysFont("arial", 32)
-SMALL_FONT = pygame.font.SysFont("arial", 24)
+icone_menu = pygame.image.load("home.png")
+icone_menu = pygame.transform.scale(icone_menu, (64, 64))
+icone_rect = icone_menu.get_rect(topleft=(15, 15))
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (200, 0, 0)
+liste_mots = charger_mots("mots.txt")
 
-CLOCK = pygame.time.Clock()
+etat = "menu"
+Max_Erreurs = 7
+temps_max = 0
+start_time = 0
 
-MOTS_FILE = "mots.txt"
-SCORES_FILE = "scores.txt"
+lettres_trouvees = []
+lettres_ratees = []
+partie_terminee = False
+message = ""
 
-# fichier.txt/score
-def load_words():
-    with open(MOTS_FILE, "r", encoding="utf-8") as f:
-        return [w.strip().lower() for w in f if w.strip()]
+mot_a_ajouter = ""
+message_ajout = ""
+couleur_message = "red"
 
-def save_word(word):
-    with open(MOTS_FILE, "a", encoding="utf-8") as f:
-        f.write(word.lower() + "\n")
+bouton_rect = pygame.Rect(500, 400, 280, 70)
 
-def save_score(name, score):
-    with open(SCORES_FILE, "a", encoding="utf-8") as f:
-        f.write(f"{name}:{score}\n")
+running = True
 
-def load_scores():
-    scores = []
-    try:
-        with open(SCORES_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                name, score = line.strip().split(":")
-                scores.append((name, int(score)))
-    except:
-        pass
-    return sorted(scores, key=lambda x: x[1], reverse=True)
 
-# dessin du pendu
-def draw_pendu(errors):
-    # potence
-    pygame.draw.line(screen, BLACK, (150, 450), (350, 450), 5)
-    pygame.draw.line(screen, BLACK, (250, 450), (250, 150), 5)
-    pygame.draw.line(screen, BLACK, (250, 150), (350, 150), 5)
-    pygame.draw.line(screen, BLACK, (350, 150), (350, 200), 5)
+#  BOUCLE PRINCIPALE =
 
-    if errors > 0:  # tête
-        pygame.draw.circle(screen, BLACK, (350, 230), 30, 4)
-    if errors > 1:  # corps
-        pygame.draw.line(screen, BLACK, (350, 260), (350, 350), 4)
-    if errors > 2:  # bras gauche
-        pygame.draw.line(screen, BLACK, (350, 280), (320, 320), 4)
-    if errors > 3:  # bras droit
-        pygame.draw.line(screen, BLACK, (350, 280), (380, 320), 4)
-    if errors > 4:  # jambe gauche
-        pygame.draw.line(screen, BLACK, (350, 350), (320, 400), 4)
-    if errors > 5:  # jambe droite
-        pygame.draw.line(screen, BLACK, (350, 350), (380, 400), 4)
 
-# animation lorsqu'on se trompe
-def error_animation():
-    for i in range(6):
-        offset = (-5 if i % 2 == 0 else 5)
-        screen.fill((255, 180, 180))
-        pygame.display.update()
-        pygame.time.delay(30)
-        screen.scroll(offset, 0)
-        pygame.display.update()
+while running:
+    clock.tick(60)
 
-# menu
-def draw_text(text, y):
-    render = FONT.render(text, True, BLACK)
-    rect = render.get_rect(center=(WIDTH//2, y))
-    screen.blit(render, rect)
-
-def menu():
-    while True:
-        screen.fill(WHITE)
-        draw_text("MEILLEUR PENDU", 100)
-        draw_text("1 - Jouer", 220)
-        draw_text("2 - Ajouter un mot", 270)
-        draw_text("3 - Tableau des scores", 320)
-        draw_text("4 - Quitter", 370)
-        pygame.display.flip()
-
+    #  MENU
+    if etat == "menu":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                running = False
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    game()
+                    etat = "difficulte"
                 elif event.key == pygame.K_2:
-                    add_word()
+                    etat = "scores"
                 elif event.key == pygame.K_3:
-                    show_scores()
+                    etat = "ajout"
                 elif event.key == pygame.K_4:
-                    pygame.quit()
-                    sys.exit()
+                    running = False
 
-def choose_difficulty():
-    while True:
-        screen.fill(WHITE)
-        draw_text("Choisir difficulté", 150)
-        draw_text("1 - Facile (6 erreurs)", 250)
-        draw_text("2 - Moyen (5 erreurs)", 300)
-        draw_text("3 - Difficile (4 erreurs)", 350)
+        afficher_menu(screen, font)
         pygame.display.flip()
+        continue
 
+    #  DIFFICULTÉ
+    if etat == "difficulte":
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    return 6
+                    temps_max = 300
                 elif event.key == pygame.K_2:
-                    return 5
+                    temps_max = 120
                 elif event.key == pygame.K_3:
-                    return 4
+                    temps_max = 30
+                else:
+                    continue
 
+                mot_secret = choisir_mots(liste_mots)
+                lettres_trouvees = []
+                lettres_ratees = []
+                partie_terminee = False
+                start_time = time.time()
+                etat = "jeu"
 
-def add_word():
-    word = ""
-    while True:
-        screen.fill(WHITE)
-        draw_text("Ajouter un mot", 200)
-        draw_text(word, 260)
+        afficher_difficulte(screen, font)
         pygame.display.flip()
+        continue
 
+    #  AJOUT MOT
+    if etat == "ajout":
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and word.isalpha():
-                    save_word(word)
-                    return
+                if event.key == pygame.K_RETURN:
+                    success, message_ajout = ajouter_mot("mots.txt", mot_a_ajouter)
+                    couleur_message = "green" if success else "red"
+                    mot_a_ajouter = ""
                 elif event.key == pygame.K_BACKSPACE:
-                    word = word[:-1]
+                    mot_a_ajouter = mot_a_ajouter[:-1]
+                elif event.key == pygame.K_ESCAPE:
+                    etat = "menu"
                 else:
-                    word += event.unicode
+                    mot_a_ajouter += event.unicode
 
-def show_scores():
-    scores = load_scores()
-    screen.fill(WHITE)
-    draw_text("TABLEAU DES SCORES", 100)
+        screen.fill("white")
+        screen.blit(font.render("AJOUTER UN MOT", True, "black"), (420, 200))
+        screen.blit(font.render(mot_a_ajouter, True, "blue"), (450, 300))
+        screen.blit(font.render(message_ajout, True, couleur_message), (420, 360))
+        pygame.display.flip()
+        continue
 
-    y = 180
-    for name, score in scores[:10]:
-        txt = SMALL_FONT.render(f"{name} : {score}", True, BLACK)
-        screen.blit(txt, (WIDTH//2 - 100, y))
-        y += 30
+    #  SCORES
+    if etat == "scores":
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                etat = "menu"
 
+        afficher_les_scores(screen, font)
+        pygame.display.flip()
+        continue
+
+    #  JEU
+    temps_restant = int(temps_max - (time.time() - start_time))
+    if temps_restant <= 0 and not partie_terminee:
+        partie_terminee = True
+        message = "Temps écoulé !"
+
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN and not partie_terminee:
+            lettre = event.unicode.lower()
+            if lettre.isalpha():
+                if lettre in mot_secret and lettre not in lettres_trouvees:
+                    lettres_trouvees.append(lettre)
+                elif lettre not in mot_secret and lettre not in lettres_ratees:
+                    lettres_ratees.append(lettre)
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if icone_rect.collidepoint(event.pos):
+                etat = "menu"
+
+    erreurs = len(lettres_ratees)
+
+    if not partie_terminee:
+        if erreurs >= Max_Erreurs:
+            partie_terminee = True
+            message = f"Perdu ! Mot : {mot_secret}"
+        elif all(l in lettres_trouvees for l in mot_secret):
+            partie_terminee = True
+            message = "Gagné !"
+
+    screen.fill("white")
+    dessin_pendu(screen, erreurs)
+
+    screen.blit(font.render(f"Temps : {temps_restant}s", True, "black"), (30, 50))
+    screen.blit(font.render(mot_cache(mot_secret, lettres_trouvees), True, "black"), (100, 300))
+    screen.blit(font.render("Ratées : " + " ".join(lettres_ratees), True, "red"), (50, 630))
+
+    if partie_terminee:
+        screen.blit(font.render(message, True, "blue"), (100, 200))
+
+    screen.blit(icone_menu, icone_rect)
     pygame.display.flip()
-    pygame.time.wait(3000)
 
-menu()
+pygame.quit()
