@@ -28,6 +28,7 @@ def enregistrer_les_scores(mot, erreurs, max_erreurs):
 
 def lire_historique():
     historique = []
+
     try:
         with open("score.txt", "r", encoding="utf-8") as f:
             for ligne in f:
@@ -35,6 +36,7 @@ def lire_historique():
                 historique.append((mot, int(score), int(erreurs)))
     except FileNotFoundError:
         pass
+
     return historique
 
 def afficher_les_scores(screen, font):
@@ -54,21 +56,35 @@ def afficher_les_scores(screen, font):
             screen.blit(font.render(texte, True, "black"), (300, y))
             y += 50
 
-    screen.blit(font.render("ECHAP - Retour au menu", True, "blue"), (420, 600))
+    retour = font.render("ECHAP - Retour au menu", True, "blue")
+    screen.blit(retour, (420, 600))
+
+def meilleur_score():
+    historique = lire_historique()
+    if not historique:
+        return None
+    return max(historique, key=lambda x: x[1])
 
 def dessin_pendu(screen, erreurs):
+
     if erreurs >= 1:
         pygame.draw.line(screen, "black", (850, 500), (1100, 500), 5)
+
         if erreurs >= 2:
             pygame.draw.line(screen, "black", (900, 500), (900, 150), 5)
+
             if erreurs >= 3:
                 pygame.draw.line(screen, "black", (900, 150), (1050, 150), 5)
+
                 if erreurs >= 4:
                     pygame.draw.line(screen, "black", (1050, 150), (1050, 200), 5)
+
                     if erreurs >= 5:
                         pygame.draw.circle(screen, "black", (1050, 240), 40, 5)
+
                         if erreurs >= 6:
                             pygame.draw.line(screen, "black", (1050, 280), (1050, 380), 5)
+
                             if erreurs >= 7:
                                 pygame.draw.line(screen, "black", (1050, 310), (1000, 350), 5)
                                 pygame.draw.line(screen, "black", (1050, 310), (1100, 350), 5)
@@ -77,21 +93,35 @@ def dessin_pendu(screen, erreurs):
 
 def afficher_le_menu(screen, font):
     screen.fill("white")
-    screen.blit(font.render("JEU DU PENDU", True, "black"), (450, 200))
-    screen.blit(font.render("1 - Jouer", True, "blue"), (500, 300))
-    screen.blit(font.render("2 - Scores", True, "green"), (500, 370))
-    screen.blit(font.render("3 - Quitter", True, "red"), (500, 440))
+
+    titre = font.render("JEU DU PENDU", True, "black")
+    jouer = font.render("1 - Jouer", True, "blue")
+    scores = font.render("2 - Scores", True, "green")
+    quitter = font.render("3 - Quitter", True, "red")
+
+    screen.blit(titre, (450, 200))
+    screen.blit(jouer, (500, 300))
+    screen.blit(scores, (500, 370))
+    screen.blit(quitter, (500, 440))
 
 def afficher_difficulte(screen, font):
     screen.fill("white")
-    screen.blit(font.render("Choisir la difficulté", True, "black"), (430, 200))
-    screen.blit(font.render("1 - Facile (10 erreurs)", True, "green"), (430, 300))
-    screen.blit(font.render("2 - Normal (7 erreurs)", True, "blue"), (430, 370))
-    screen.blit(font.render("3 - Difficile (5 erreurs)", True, "red"), (430, 440))
 
-# ---------- SETUP ----------
+    titre = font.render("DIFFICULTÉ", True, "black")
+    facile = font.render("1 - Facile", True, "green")
+    normal = font.render("2 - Normal", True, "blue")
+    difficile = font.render("3 - Difficile", True, "red")
+
+    screen.blit(titre, (480, 200))
+    screen.blit(facile, (500, 300))
+    screen.blit(normal, (500, 370))
+    screen.blit(difficile, (500, 440))
+
+
+# ---------- PYGAME SETUP ----------
 
 pygame.init()
+
 font = pygame.font.Font(None, 64)
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
@@ -123,11 +153,14 @@ while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     etat = "difficulte"
+
                 elif event.key == pygame.K_2:
                     etat = "scores"
+
                 elif event.key == pygame.K_3:
                     running = False
 
@@ -141,6 +174,7 @@ while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     Max_Erreurs = 10
@@ -168,8 +202,10 @@ while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                etat = "menu"
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    etat = "menu"
 
         afficher_les_scores(screen, font)
         pygame.display.flip()
@@ -196,7 +232,13 @@ while running:
             if partie_terminee and bouton_rect.collidepoint(event.pos):
                 etat = "difficulte"
 
+    # ---------- LOGIQUE ----------
     erreurs = len(lettres_ratees)
+
+    ETAPES_DESSIN = 7
+    erreurs_dessin = int((erreurs / Max_Erreurs) * ETAPES_DESSIN)
+    if erreurs_dessin > ETAPES_DESSIN:
+        erreurs_dessin = ETAPES_DESSIN
 
     gagne = True
     for lettre in mot_secret:
@@ -208,13 +250,15 @@ while running:
             partie_terminee = True
             message = "Perdu, le mot était : " + mot_secret
             enregistrer_les_scores(mot_secret, erreurs, Max_Erreurs)
+
         elif gagne:
             partie_terminee = True
             message = "Félicitations vous avez gagné"
             enregistrer_les_scores(mot_secret, erreurs, Max_Erreurs)
 
+    # ---------- AFFICHAGE ----------
     screen.fill("white")
-    dessin_pendu(screen, erreurs)
+    dessin_pendu(screen, erreurs_dessin)
 
     screen.blit(font.render(f"Erreurs : {erreurs} / {Max_Erreurs}", True, "black"), (30, 100))
     screen.blit(font.render("Lettres ratées : " + " ".join(lettres_ratees), True, "red"), (50, 630))

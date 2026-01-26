@@ -19,3 +19,8 @@ logarithme,5, 2
 nombre,0, 7
 exposant,0,7
 ordinateur,10,0
+jeux,3,7
+realisation,0,5
+binaire,0,10
+programmation,0,10
+bleu,0,5
