@@ -24,3 +24,6 @@ realisation,0,5
 binaire,0,10
 programmation,0,10
 bleu,0,5
+realisation,0,7
+histoire,0,7
+organisation,0,7

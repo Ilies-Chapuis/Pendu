@@ -38,3 +38,5 @@ monteur
 carte
 histoire
 geographie
+bonjour
+améliorer
