@@ -123,10 +123,12 @@ def ajouter_mot(fichier, mot):
 
     if mot == "":
         return False, "Mot vide"
-    if not mot.isalpha():
+    elif not mot.isalpha():
         return False, "Lettres uniquement"
-    if len(mot) < 3:
+    elif len(mot) < 3:
         return False, "Mot trop court"
+    elif len(mot) > 24:
+        return False, "Mot trop long"
 
     mots_existants = charger_mots(fichier)
     if mot in mots_existants:
@@ -149,7 +151,7 @@ clock = pygame.time.Clock()
 
 icone_menu = pygame.image.load("home.png")
 icone_menu = pygame.transform.scale(icone_menu, (64, 64))
-icone_rect = icone_menu.get_rect(topleft=(15, 15))
+icone_rect = icone_menu.get_rect(topleft=(5, 5))
 
 liste_mots = charger_mots("mots.txt")
 
@@ -159,7 +161,7 @@ temps_max = 0
 start_time = 0
 
 lettres_trouvees = []
-lettres_ratees = []
+lettres_erronée = []
 partie_terminee = False
 message = ""
 
@@ -213,7 +215,7 @@ while running:
 
                 mot_secret = choisir_mots(liste_mots)
                 lettres_trouvees = []
-                lettres_ratees = []
+                lettres_erronée = []
                 partie_terminee = False
                 start_time = time.time()
                 etat = "jeu"
@@ -266,14 +268,14 @@ while running:
             if lettre.isalpha():
                 if lettre in mot_secret and lettre not in lettres_trouvees:
                     lettres_trouvees.append(lettre)
-                elif lettre not in mot_secret and lettre not in lettres_ratees:
-                    lettres_ratees.append(lettre)
+                elif lettre not in mot_secret and lettre not in lettres_erronée:
+                    lettres_erronée.append(lettre)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if icone_rect.collidepoint(event.pos):
                 etat = "menu"
 
-    erreurs = len(lettres_ratees)
+    erreurs = len(lettres_erronée)
 
     if not partie_terminee:
         if erreurs >= Max_Erreurs:
@@ -288,7 +290,7 @@ while running:
 
     screen.blit(font.render(f"Temps : {temps_restant}s", True, "black"), (30, 50))
     screen.blit(font.render(mot_cache(mot_secret, lettres_trouvees), True, "black"), (100, 300))
-    screen.blit(font.render("Ratées : " + " ".join(lettres_ratees), True, "red"), (50, 630))
+    screen.blit(font.render("Erreurs : " + " ".join(lettres_erronée), True, "red"), (50, 630))
 
     if partie_terminee:
         screen.blit(font.render(message, True, "blue"), (100, 200))
