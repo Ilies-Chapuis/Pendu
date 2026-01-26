@@ -46,3 +46,4 @@ kayak,0,10
 developpeur,0,10
 video,0,10
 jeux,0,7
+video,0,10
