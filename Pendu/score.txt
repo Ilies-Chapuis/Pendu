@@ -27,3 +27,5 @@ bleu,0,5
 realisation,0,7
 histoire,0,7
 organisation,0,7
+mer,0,7
+boucle,0,7
